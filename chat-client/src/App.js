@@ -112,16 +112,18 @@ function App() {
 
   const sendUserMessage = () => {
     if (message.trim()) {
-      socket.emit("user_message", { text: message, name });
-      setMessages((prev) => [...prev, { text: message, sender: "Me" }]);
+      // socket.emit("user_message", { text: message, name });
+      // setMessages((prev) => [...prev, { text: message, sender: "Me" }]);
+      socket.send(message);
       setMessage("");
     }
   };
 
   const sendOperatorMessage = () => {
     if (message.trim() && selectedUser) {
-      socket.emit("operator_message", { text: message, user_id: selectedUser.id });
-      setMessages((prev) => [...prev, { text: message, sender: "ParodyGPT" }]);
+      // socket.emit("operator_message", { text: message, user_id: selectedUser.id });
+      // setMessages((prev) => [...prev, { text: message, sender: "ParodyGPT" }]);
+      socket.send(message);
       setMessage("");
     }
   };
