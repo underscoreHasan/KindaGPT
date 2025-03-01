@@ -48,7 +48,7 @@
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 
-const socket = io("http://127.0.0.1:5000"); // Connect to Flask backend
+const socket = io("128.189.241.176:5000"); // Connect to Flask backend
 
 function App() {
   const [role, setRole] = useState(null);
