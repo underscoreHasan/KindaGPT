@@ -1,93 +1,96 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { Socket } from "socket.io-client"
-import io from "socket.io-client"
+import { io, type Socket } from "socket.io-client"
+
+type Role = "sender" | "receiver"
 
 type Message = {
   role: "user" | "assistant"
   content: string
 }
 
-export function useChat() {
+export function useChat(role?: Role) {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    // For demo purposes, we'll use a mock socket
-    // In a real app, you would connect to your server
-    const newSocket = io("128.189.241.176:5000");
+    if (!role) return
 
-    // Mock socket for demonstration
-    const mockSocket = {
-      on: (event: string, callback: Function) => {
-        if (event === "connect") {
-          setTimeout(() => {
-            setIsConnected(true)
-            callback()
-          }, 1000)
-        }
-        if (event === "chat message") {
-          // Store the callback to simulate receiving messages
-          ;(mockSocket as any).messageCallback = callback
-        }
-      },
-      emit: (event: string, message: string) => {
-        if (event === "chat message") {
-          // Simulate friend typing and responding after a delay
-          setTimeout(
-            () => {
-              const response = `I received your message: "${message}"\n\nThis is a simulated response from your friend. In a real implementation, this would come from your friend's computer.`
-              ;(mockSocket as any).messageCallback(response)
-            },
-            2000 + Math.random() * 2000,
-          ) // Random delay between 2-4 seconds
-        }
-      },
-      disconnect: () => {
-        setIsConnected(false)
-      },
-    } as unknown as Socket
+    // Connect to your real Socket.io server
+    const newSocket = io("206.87.155.8:5000")
 
-    setSocket(newSocket as Socket)
+    newSocket.on("connect", () => {
+      console.log("Connected to socket server")
+      setIsConnected(true)
 
-    // Connect to the mock socket
-    mockSocket.on("connect", () => {
-      console.log("Connected to mock socket")
+      // Identify this client's role to the server
+      newSocket.emit("set-role", role)
     })
 
+    newSocket.on("disconnect", () => {
+      console.log("Disconnected from socket server")
+      setIsConnected(false)
+    })
+
+    setSocket(newSocket)
+
     return () => {
-      if (socket) {
-        socket.disconnect()
-      }
+      newSocket.disconnect()
     }
-  }, [])
+  }, [role])
 
   useEffect(() => {
-    if (!socket) return
+    if (!socket || !role) return
 
     // Listen for incoming messages
-    socket.on("message", (message: string) => {
-      setMessages((prev) => [...prev, { role: "assistant", content: message }])
-      setIsWaitingForResponse(false)
+    socket.on("chat message", (message: { role: "user" | "assistant"; content: string }) => {
+      // Only add messages that make sense for this role
+      // Sender should see their own messages and assistant responses
+      // Receiver should see user messages they need to respond to and their own responses
+
+      if (
+        (role === "sender" && (message.role === "user" || message.role === "assistant")) ||
+        (role === "receiver" && (message.role === "user" || message.role === "assistant"))
+      ) {
+        setMessages((prev) => [...prev, message])
+      }
+
+      // If we're the sender and received an assistant message, or
+      // if we're the receiver and received a user message,
+      // we're no longer waiting for a response
+      if ((role === "sender" && message.role === "assistant") || (role === "receiver" && message.role === "user")) {
+        setIsWaitingForResponse(false)
+      }
     })
 
     return () => {
       socket.off("chat message")
     }
-  }, [socket])
+  }, [socket, role])
 
   const sendMessage = (content: string) => {
-    if (!socket || !isConnected) return
+    if (!socket || !isConnected || !role) return
 
-    // Add user message to the chat
-    setMessages((prev) => [...prev, { role: "user", content }])
-    setIsWaitingForResponse(true)
+    // Determine the role of the message based on who's sending it
+    const messageRole = role === "sender" ? "user" : "assistant"
 
-    // Send message to server (which would forward to friend)
-    socket.send(content)
+    // Create the message object
+    const message = { role: messageRole, content }
+
+    // Add message to local state
+    setMessages((prev) => [...prev, message])
+
+    // If sender is sending a user message, they should wait for a response
+    // If receiver is sending an assistant message, they're responding to a user message
+    if (role === "sender") {
+      setIsWaitingForResponse(true)
+    }
+
+    // Send message to server
+    socket.emit("chat message", message)
   }
 
   return {
