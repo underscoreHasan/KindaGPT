@@ -86,7 +86,7 @@ export default function ChatInterface() {
             </h2>
             <p className="max-w-md">
               {role === "sender"
-                ? <img src="logo.png" alt="logo" width="250px"><img/>
+                ? <img src="logo.png" alt="logo" width="250px"></img>
                 : "You'll see messages from others and can respond as if you were ChatGPT."}
             </p>
           </div>
