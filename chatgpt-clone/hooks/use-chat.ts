@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { io, type Socket } from "socket.io-client"
+import { getFeedback } from "./use-openai"
 
 type Role = "sender" | "receiver"
 
 type Message = {
   role: "user" | "assistant"
   content: string
+  feedback?: string
+  previousQuestion?: string
 }
 
 export function useChat(role?: Role) {
@@ -19,15 +22,11 @@ export function useChat(role?: Role) {
   useEffect(() => {
     if (!role) return
 
-    // Connect to your real Socket.io server
     const newSocket = io("206.87.155.8:5000")
 
     newSocket.on("connect", () => {
       console.log("Connected to socket server")
       setIsConnected(true)
-
-      // Identify this client's role to the server
-      //newSocket.emit("set-role", role)
     })
 
     newSocket.on("disconnect", () => {
@@ -45,32 +44,16 @@ export function useChat(role?: Role) {
   useEffect(() => {
     if (!socket || !role) return
 
-    //socket.on("message", (message) => {console.log(message.content)})
-
-    // Listen for incoming messages
-    socket.on("message", (message: { role: "user" | "assistant"; content: string }) => {
-      // // Only add messages that make sense for this role
-      // // Sender should see their own messages and assistant responses
-      // // Receiver should see user messages they need to respond to and their own responses
-
-      // if (
-      //   (role === "sender" && (message.role === "user" || message.role === "assistant")) ||
-      //   (role === "receiver" && (message.role === "user" || message.role === "assistant"))
-      // ) {
-      //   setMessages((prev) => [...prev, message])
-      // }
-
-      // // If we're the sender and received an assistant message, or
-      // // if we're the receiver and received a user message,
-      // // we're no longer waiting for a response
-      // if ((role === "sender" && message.role === "assistant") || (role === "receiver" && message.role === "user")) {
-      //   setIsWaitingForResponse(false)
-      // }
-      if (
-        (role === "sender" && message.role === "assistant") || 
-        (role === "receiver" && message.role === "user")
-      ) {
-        setMessages((prev) => [...prev, message])
+    socket.on("message", async (message: Message) => {
+      if ((role === "sender" && message.role === "assistant") || (role === "receiver" && message.role === "user")) {
+        // If this is an assistant message and we're the receiver,
+        // get feedback for the response
+        if (role === "receiver" && message.role === "user") {
+          setMessages((prev) => [...prev, message])
+        } else {
+          // For sender receiving assistant messages
+          setMessages((prev) => [...prev, message])
+        }
       }
 
       // If sender gets assistant message OR receiver gets user message, stop waiting
@@ -84,16 +67,33 @@ export function useChat(role?: Role) {
     }
   }, [socket, role])
 
-  const sendMessage = (content: string) => {
+  const sendMessage = async (content: string) => {
     if (!socket || !isConnected || !role) return
 
     const messageRole = role === "sender" ? "user" : "assistant"
-    const message = { role: messageRole, content }
 
-    // Add only sender's own messages locally
+    // Get the previous question if this is an assistant response
+    const previousQuestion =
+      role === "receiver" && messages.length > 0 ? messages[messages.length - 1].content : undefined
+
+    const message: Message = {
+      role: messageRole,
+      content,
+      previousQuestion,
+    }
+
+    // If sending as assistant, get feedback
+    if (role === "receiver" && previousQuestion) {
+      const feedback = await getFeedback(previousQuestion, content)
+      message.feedback = feedback
+    }
+
+    // Add message locally
     setMessages((prev) => [...prev, message])
 
-    if (role === "sender") setIsWaitingForResponse(true)
+    if (role === "sender") {
+      setIsWaitingForResponse(true)
+    }
 
     socket.emit("message", message)
   }

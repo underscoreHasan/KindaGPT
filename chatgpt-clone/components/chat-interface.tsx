@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { useChat } from "@/hooks/use-chat"
 import RoleSelector from "./role-selector"
+import { FeedbackSection } from "./feedback-section"
 
 type Role = "sender" | "receiver"
 
@@ -38,7 +39,7 @@ export default function ChatInterface() {
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+  }, [])
 
   // If role is not selected, show role selector
   if (!role) {
@@ -94,27 +95,30 @@ export default function ChatInterface() {
               (role === "sender" && message.role === "user") || (role === "receiver" && message.role === "assistant")
 
             return (
-              <div
-                key={index}
-                className={cn("flex items-start gap-4 max-w-full", isFromCurrentUser ? "justify-end" : "")}
-              >
-                {message.role !== "user" && (
-                  <Avatar className="w-8 h-8 border">
-                    <Bot className="w-5 h-5" />
-                  </Avatar>
-                )}
-                <div
-                  className={cn(
-                    "rounded-lg px-4 py-2 max-w-[80%]",
-                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
+              <div key={index} className="space-y-2">
+                <div className={cn("flex items-start gap-4 max-w-full", isFromCurrentUser ? "justify-end" : "")}>
+                  {message.role !== "user" && (
+                    <Avatar className="w-8 h-8 border">
+                      <Bot className="w-5 h-5" />
+                    </Avatar>
                   )}
-                >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div
+                    className={cn(
+                      "rounded-lg px-4 py-2 max-w-[80%]",
+                      message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
+                    )}
+                  >
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  </div>
+                  {message.role === "user" && (
+                    <Avatar className="w-8 h-8 border">
+                      <User className="w-5 h-5" />
+                    </Avatar>
+                  )}
                 </div>
-                {message.role === "user" && (
-                  <Avatar className="w-8 h-8 border">
-                    <User className="w-5 h-5" />
-                  </Avatar>
+                {/* Show feedback only for assistant messages when in receiver role */}
+                {role === "receiver" && message.role === "assistant" && message.feedback && (
+                  <FeedbackSection feedback={message.feedback} />
                 )}
               </div>
             )
@@ -178,3 +182,4 @@ export default function ChatInterface() {
     </div>
   )
 }
+
