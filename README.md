@@ -47,7 +47,7 @@ On the LLM side, users receive actual AI-generated feedback on their responses t
      ```  
    - Install dependencies:  
      ```sh
-     npm install
+     npm install --force
      ```  
    - Run the client:  
      ```sh
