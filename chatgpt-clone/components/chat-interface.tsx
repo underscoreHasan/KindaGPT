@@ -82,11 +82,11 @@ export default function ChatInterface() {
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <Bot className="w-12 h-12 mb-4" />
             <h2 className="text-2xl font-semibold mb-2">
-              {role === "sender" ? "Send a message to start chatting" : "Waiting for messages to respond to"}
+              {role === "sender" ? "Send a message to start chatting with..." : "Waiting for messages to respond to"}
             </h2>
             <p className="max-w-md">
               {role === "sender"
-                ? <img src="logo.png" alt="logo" width="250px"></img>
+                ? <img src="logolight.png" alt="logo" width="300px"></img>
                 : "You'll see messages from others and can respond as if you were ChatGPT."}
             </p>
           </div>
