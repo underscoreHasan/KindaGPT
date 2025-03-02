@@ -16,6 +16,8 @@ Provide a brief (2-3 sentence) evaluation of how well this response addresses th
 - Clarity and tone
 - Adherence to best practices
 
+Show me how YOU would have responded, and then rate my response by how similar it was to you and how useful it was
+
 Your evaluation:`
 
     const { text } = await generateText({
