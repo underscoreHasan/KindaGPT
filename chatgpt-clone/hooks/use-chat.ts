@@ -27,7 +27,7 @@ export function useChat(role?: Role) {
       setIsConnected(true)
 
       // Identify this client's role to the server
-      newSocket.emit("set-role", role)
+      //newSocket.emit("set-role", role)
     })
 
     newSocket.on("disconnect", () => {
@@ -45,52 +45,57 @@ export function useChat(role?: Role) {
   useEffect(() => {
     if (!socket || !role) return
 
-    // Listen for incoming messages
-    socket.on("chat message", (message: { role: "user" | "assistant"; content: string }) => {
-      // Only add messages that make sense for this role
-      // Sender should see their own messages and assistant responses
-      // Receiver should see user messages they need to respond to and their own responses
+    //socket.on("message", (message) => {console.log(message.content)})
 
+    // Listen for incoming messages
+    socket.on("message", (message: { role: "user" | "assistant"; content: string }) => {
+      // // Only add messages that make sense for this role
+      // // Sender should see their own messages and assistant responses
+      // // Receiver should see user messages they need to respond to and their own responses
+
+      // if (
+      //   (role === "sender" && (message.role === "user" || message.role === "assistant")) ||
+      //   (role === "receiver" && (message.role === "user" || message.role === "assistant"))
+      // ) {
+      //   setMessages((prev) => [...prev, message])
+      // }
+
+      // // If we're the sender and received an assistant message, or
+      // // if we're the receiver and received a user message,
+      // // we're no longer waiting for a response
+      // if ((role === "sender" && message.role === "assistant") || (role === "receiver" && message.role === "user")) {
+      //   setIsWaitingForResponse(false)
+      // }
       if (
-        (role === "sender" && (message.role === "user" || message.role === "assistant")) ||
-        (role === "receiver" && (message.role === "user" || message.role === "assistant"))
+        (role === "sender" && message.role === "assistant") || 
+        (role === "receiver" && message.role === "user")
       ) {
         setMessages((prev) => [...prev, message])
       }
 
-      // If we're the sender and received an assistant message, or
-      // if we're the receiver and received a user message,
-      // we're no longer waiting for a response
+      // If sender gets assistant message OR receiver gets user message, stop waiting
       if ((role === "sender" && message.role === "assistant") || (role === "receiver" && message.role === "user")) {
         setIsWaitingForResponse(false)
       }
     })
 
     return () => {
-      socket.off("chat message")
+      socket.off("message")
     }
   }, [socket, role])
 
   const sendMessage = (content: string) => {
     if (!socket || !isConnected || !role) return
 
-    // Determine the role of the message based on who's sending it
     const messageRole = role === "sender" ? "user" : "assistant"
-
-    // Create the message object
     const message = { role: messageRole, content }
 
-    // Add message to local state
+    // Add only sender's own messages locally
     setMessages((prev) => [...prev, message])
 
-    // If sender is sending a user message, they should wait for a response
-    // If receiver is sending an assistant message, they're responding to a user message
-    if (role === "sender") {
-      setIsWaitingForResponse(true)
-    }
+    if (role === "sender") setIsWaitingForResponse(true)
 
-    // Send message to server
-    socket.emit("chat message", message)
+    socket.emit("message", message)
   }
 
   return {
