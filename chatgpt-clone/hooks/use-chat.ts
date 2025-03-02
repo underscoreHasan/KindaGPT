@@ -14,11 +14,12 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
+  const [username, setUsername] = useState("")
 
   useEffect(() => {
     // For demo purposes, we'll use a mock socket
     // In a real app, you would connect to your server
-    const newSocket = io("128.189.241.176:5000");
+    const newSocket = io("128.189.229.144:4000");
 
     // Mock socket for demonstration
     const mockSocket = {
@@ -79,7 +80,28 @@ export function useChat() {
     }
   }, [socket])
 
-  const sendMessage = (content: string) => {
+  useEffect(() => {
+    if (!socket) return
+
+    // Listen for incoming messages
+    socket.on("private_message", (data: string[]) => {
+      const senderUsername = data[0];
+      const content = data[1];
+
+      if (senderUsername === username) {
+        setMessages((prev) => [...prev, { role: "assistant", content: content }])
+        setIsWaitingForResponse(false)
+      } else {
+        console.log("ay we got a call for private message, but I'm the one that sent the message so nothing's showing up")
+      }
+    })
+
+    return () => {
+      socket.off("private_message")
+    }
+  }, [socket])
+
+  const sendMessage = (content: string, username: string) => {
     if (!socket || !isConnected) return
 
     // Add user message to the chat
@@ -87,7 +109,13 @@ export function useChat() {
     setIsWaitingForResponse(true)
 
     // Send message to server (which would forward to friend)
-    socket.send(content)
+    socket.emit("private_message", [username, content]);
+  }
+
+  const registerUser = (username: string) => {
+    if (!socket) return
+    setUsername(username)
+    socket.emit("register", username);
   }
 
   return {
@@ -95,6 +123,7 @@ export function useChat() {
     sendMessage,
     isWaitingForResponse,
     isConnected,
+    registerUser
   }
 }
 

@@ -11,17 +11,24 @@ import { cn } from "@/lib/utils"
 import { useChat } from "@/hooks/use-chat"
 
 export default function ChatInterface() {
-  const { messages, sendMessage, isWaitingForResponse } = useChat()
+  const { messages, sendMessage, isWaitingForResponse, registerUser } = useChat()
   const [input, setInput] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [username, setUsername] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim() && !isWaitingForResponse) {
-      sendMessage(input)
+      sendMessage(input, username)
       setInput("")
     }
   }
+
+  const handleRegister = () => {
+    if (username) {
+      registerUser(username);
+    }
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -42,6 +49,12 @@ export default function ChatInterface() {
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <Bot className="w-12 h-12 mb-4" />
             <h2 className="text-2xl font-semibold mb-2">How can I help you today?</h2>
+            <input
+              type="text"
+              placeholder="Enter your username"
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <button onClick={handleRegister}>Register</button>
             <p className="max-w-md">
               Send a message to start chatting to kindaGPT.
             </p>
