@@ -88,9 +88,9 @@ export function useChat() {
       const senderUsername = data[0];
       const content = data[1];
 
-      if (senderUsername === username) {
+      if (senderUsername != username) {
         setMessages((prev) => [...prev, { role: "assistant", content: content }])
-        setIsWaitingForResponse(false)
+        setIsWaitingForResponse(false)  
       } else {
         console.log("ay we got a call for private message, but I'm the one that sent the message so nothing's showing up")
       }
@@ -99,7 +99,7 @@ export function useChat() {
     return () => {
       socket.off("private_message")
     }
-  }, [socket])
+  }, [socket, username])
 
   const sendMessage = (content: string, username: string) => {
     if (!socket || !isConnected) return
@@ -115,6 +115,7 @@ export function useChat() {
   const registerUser = (username: string) => {
     if (!socket) return
     setUsername(username)
+    console.log(username)
     socket.emit("register", username);
   }
 
