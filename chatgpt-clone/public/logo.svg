@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <style>
+      .cls-1 {
+        font-size: 116.417px;
+        font-family: Glass;
+      }
+
+      .cls-2 {
+        font-family: "Tw Cen MT Condensed Extra Bold";
+        font-size: 179.917px;
+      }
+    </style>
+  </defs>
+  <text id="kindaGPT" class="cls-1" transform="translate(36.994 671.481) scale(2.487)">kinda<tspan class="cls-2">GPT</tspan></text>
+</svg>
