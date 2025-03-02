@@ -55,4 +55,4 @@ On the LLM side, users receive actual AI-generated feedback on their responses t
      ```  
 
 4. **Test It Out!**  
-   - Open one tab as the user and another tab as the LLM to experience the interaction.  
+   - Run one instance of the client as the user and another as the LLM to experience the interaction.  
