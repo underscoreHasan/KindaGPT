@@ -52,7 +52,9 @@ export default function ChatInterface() {
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center">
           <Bot className="w-6 h-6 mr-2 text-primary" />
-          <h1 className="text-xl font-semibold">ChatGPT</h1>
+          <h1 className="text-xl font-semibold">
+            <img src="logo.png" width="100px" alt="logo"></img>
+          </h1>
         </div>
         <div className="flex items-center">
           <span
